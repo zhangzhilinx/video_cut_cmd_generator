@@ -1,0 +1,1 @@
+from ui.durations_list_model import DurationsListModel
