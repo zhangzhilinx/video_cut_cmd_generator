@@ -14,10 +14,13 @@ class ModelData:
 
     schema = {
         'type': 'object',
-        'required': ['path_src', 'path_dst_dir', 'intervals'],
+        'required': ['src_filename', 'src_path_dir', 'intervals'],
         'properties': {
-            'path_src': {'type': 'string'},
-            'path_dst_dir': {'type': 'string'},
+            'src_filename': {'type': 'string'},
+            'src_path_dir': {'type': 'string'},
+            'dst_path_dir': {'type': 'string'},
+            # 'src_duration': {'type': 'integer', 'minimum': 0},
+            # 'src_size': {'type': 'integer', 'minimum': 0},
             'intervals': {
                 'type': 'array',
                 'items': {
@@ -41,8 +44,11 @@ class ModelData:
             self._kv = kv
         else:
             self._kv = {
-                'path_src': '',
-                'path_dst_dir': '',
+                'src_filename': '',
+                'src_path_dir': '',
+                'dst_path_dir': '',
+                # 'src_duration': 0,
+                # 'src_size': 0,
                 'intervals': []
             }
 
@@ -94,22 +100,49 @@ class ModelData:
         )
 
     @property
-    def path_src(self) -> str:
-        return self._kv.get('path_src', None)
+    def src_filename(self) -> str:
+        return self._kv.get('src_filename', '')
 
-    @path_src.setter
-    def path_src(self, value: str):
+    @src_filename.setter
+    def src_filename(self, value: str):
         if isinstance(value, str):
-            self._kv['path_src'] = value
+            self._kv['src_filename'] = value
 
     @property
-    def path_dst_dir(self) -> str:
-        return self._kv.get('path_dst_dir', None)
+    def src_path_dir(self) -> str:
+        return self._kv.get('src_path_dir', '')
 
-    @path_dst_dir.setter
-    def path_dst_dir(self, value: str):
+    @src_path_dir.setter
+    def src_path_dir(self, value: str):
         if isinstance(value, str):
-            self._kv['path_dst_dir'] = value
+            self._kv['src_path_dir'] = value
+
+    @property
+    def dst_path_dir(self) -> str:
+        return self._kv.get('dst_path_dir', '')
+
+    @dst_path_dir.setter
+    def dst_path_dir(self, value: str):
+        if isinstance(value, str):
+            self._kv['dst_path_dir'] = value
+
+    # @property
+    # def src_duration(self) -> int:
+    #     return self._kv.get('src_duration', 0)
+    #
+    # @src_duration.setter
+    # def src_duration(self, value: int):
+    #     if isinstance(value, int) and value >= 0:
+    #         self._kv['src_duration'] = value
+    #
+    # @property
+    # def src_size(self) -> int:
+    #     return self._kv.get('src_size', 0)
+    #
+    # @src_size.setter
+    # def src_size(self, value: int):
+    #     if isinstance(value, int) and value >= 0:
+    #         self._kv['src_duration'] = value
 
     def intervals_iter(self) -> Iterable[List[List[int]]]:
         return iter(self._kv.get('intervals', []))

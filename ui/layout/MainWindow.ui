@@ -14,30 +14,34 @@
    <string>小工具-ffmpeg无损剪辑命令产生器</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1">
+   <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,2">
     <item>
-     <layout class="QVBoxLayout" name="vlayout_left" stretch="1,3">
+     <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,3">
       <item>
-       <widget class="QGroupBox" name="grp_file">
-        <property name="title">
-         <string>选定文件</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout">
-         <item row="0" column="0">
-          <widget class="FileDropLabel" name="lbl_file_drop">
-           <property name="acceptDrops">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>将待剪辑的文件拖到这里即可选定文件</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QGroupBox" name="grp_file">
+          <property name="title">
+           <string>选定文件</string>
+          </property>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="0" column="0">
+            <widget class="FileDropLabel" name="lbl_file_drop">
+             <property name="acceptDrops">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>将待剪辑的视频/其对应的JSON配置拖至此处</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="QGroupBox" name="grp_intervals">
@@ -46,8 +50,52 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
-          <layout class="QGridLayout" name="glayout_intervals">
-           <item row="4" column="1">
+          <layout class="QGridLayout" name="gridLayout_2">
+           <item row="0" column="0">
+            <widget class="QToolButton" name="tbtn_move_up">
+             <property name="text">
+              <string>上移</string>
+             </property>
+             <property name="shortcut">
+              <string>Ctrl+Alt+Up</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1" rowspan="5">
+            <widget class="QTableView" name="tabv_intervals">
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QToolButton" name="tbtn_move_down">
+             <property name="text">
+              <string>下移</string>
+             </property>
+             <property name="shortcut">
+              <string>Ctrl+Alt+Down</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QToolButton" name="tbtn_remove">
+             <property name="text">
+              <string>删除</string>
+             </property>
+             <property name="shortcut">
+              <string>Del</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QToolButton" name="tbtn_clear">
+             <property name="text">
+              <string>清空</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
             <spacer name="vs_intervals_buts">
              <property name="orientation">
               <enum>Qt::Vertical</enum>
@@ -60,41 +108,6 @@
              </property>
             </spacer>
            </item>
-           <item row="0" column="1">
-            <widget class="QToolButton" name="tbtn_move_up">
-             <property name="text">
-              <string>上移</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QToolButton" name="tbtn_remove">
-             <property name="text">
-              <string>删除</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QToolButton" name="tbtn_move_down">
-             <property name="text">
-              <string>下移</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QToolButton" name="tbtn_clear">
-             <property name="text">
-              <string>清空</string>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0" rowspan="5">
-            <widget class="QTableView" name="tabv_intervals">
-             <property name="selectionBehavior">
-              <enum>QAbstractItemView::SelectRows</enum>
-             </property>
-            </widget>
-           </item>
           </layout>
          </item>
          <item>
@@ -104,7 +117,7 @@
              <item row="0" column="0">
               <widget class="QLabel" name="lbl_interval_begin">
                <property name="text">
-                <string>开始时间</string>
+                <string>开始</string>
                </property>
               </widget>
              </item>
@@ -150,7 +163,7 @@
              <item row="1" column="0">
               <widget class="QLabel" name="lbl_interval_end">
                <property name="text">
-                <string>截止时间</string>
+                <string>截止</string>
                </property>
               </widget>
              </item>
@@ -196,9 +209,22 @@
             </layout>
            </item>
            <item>
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
             <widget class="QPushButton" name="pbtn_add_interval">
              <property name="text">
-              <string>增加一个时间段</string>
+              <string>增加该时间段</string>
              </property>
              <property name="shortcut">
               <string>Ctrl+Return</string>
@@ -213,75 +239,237 @@
      </layout>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="vlayout_right">
+     <layout class="QVBoxLayout" name="verticalLayout_5">
       <item>
-       <widget class="QGroupBox" name="grp_source">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QGroupBox" name="groupBox">
+          <property name="title">
+           <string>输入参数</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout_3">
+           <item row="0" column="0">
+            <widget class="QLabel" name="lbl_filename">
+             <property name="text">
+              <string>文件名称</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="ledt_src_filename"/>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="lbl_src_dir">
+             <property name="text">
+              <string>所在目录</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLineEdit" name="ledt_src_path_dir"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="grp_output">
+          <property name="title">
+           <string>输出参数</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout_2">
+           <item row="0" column="0">
+            <widget class="QLabel" name="lbl_dst_dir">
+             <property name="text">
+              <string>输出目录</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLineEdit" name="ledt_dst_path_dir"/>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="grp_meta">
         <property name="title">
-         <string>源码预览/导入源码</string>
+         <string>视频属性</string>
         </property>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="1" column="0">
-          <spacer name="hs_parse_source">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>290</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <layout class="QFormLayout" name="formLayout">
+             <item row="0" column="0">
+              <widget class="QLabel" name="lbl_src_duration">
+               <property name="text">
+                <string>视频时长</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="spin_src_duration">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+               <property name="suffix">
+                <string> 毫秒</string>
+               </property>
+               <property name="maximum">
+                <number>999999999</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QFormLayout" name="formLayout_4">
+             <item row="0" column="0">
+              <widget class="QLabel" name="lbl_src_size">
+               <property name="text">
+                <string>视频大小</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QSpinBox" name="spin_src_size">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+               <property name="suffix">
+                <string> 字节</string>
+               </property>
+               <property name="maximum">
+                <number>999999999</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
          </item>
-         <item row="1" column="2">
-          <widget class="QToolButton" name="tbtn_parse_source">
-           <property name="text">
-            <string>解析源码</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0" colspan="3">
-          <widget class="QTextEdit" name="txtedt_source">
-           <property name="lineWrapMode">
-            <enum>QTextEdit::NoWrap</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QCheckBox" name="chkbox_format_source">
-           <property name="text">
-            <string>格式化源码</string>
-           </property>
-          </widget>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QToolButton" name="tbtn_src_meta_refresh">
+             <property name="text">
+              <string>刷新数据</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
         </layout>
        </widget>
       </item>
       <item>
-       <widget class="QGroupBox" name="grp_output">
+       <widget class="QGroupBox" name="grp_view">
         <property name="title">
-         <string>输出命令</string>
+         <string>输出预览</string>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <item>
-            <widget class="QLabel" name="lbl_output_path">
-             <property name="text">
-              <string>视频输出路径</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="lineedt_output_path"/>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <widget class="QTextBrowser" name="txtbrw_output">
-           <property name="lineWrapMode">
-            <enum>QTextEdit::NoWrap</enum>
+          <widget class="QTabWidget" name="tabw_view">
+           <property name="currentIndex">
+            <number>0</number>
            </property>
+           <widget class="QWidget" name="tab_commands">
+            <attribute name="title">
+             <string>命令输出</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_6">
+             <item>
+              <widget class="QTextBrowser" name="txtbrw_output">
+               <property name="lineWrapMode">
+                <enum>QTextEdit::NoWrap</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <item>
+                <spacer name="horizontalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QToolButton" name="tbtn_refresh_commands">
+                 <property name="text">
+                  <string>刷新</string>
+                 </property>
+                 <property name="shortcut">
+                  <string>Ctrl+R</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tab_source">
+            <attribute name="title">
+             <string>源码预览</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_7">
+             <item>
+              <widget class="QTextBrowser" name="txtbrw_source">
+               <property name="lineWrapMode">
+                <enum>QTextEdit::NoWrap</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_7">
+               <item>
+                <spacer name="horizontalSpacer_3">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QToolButton" name="tbtn_refresh_source">
+                 <property name="text">
+                  <string>刷新</string>
+                 </property>
+                 <property name="shortcut">
+                  <string>Ctrl+R</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </item>
         </layout>
@@ -304,17 +492,70 @@
     <property name="title">
      <string>任务(&amp;T)</string>
     </property>
-    <addaction name="act_new_task"/>
+    <addaction name="act_file_new"/>
+    <addaction name="act_file_open"/>
+    <addaction name="act_file_save"/>
+    <addaction name="act_file_save_as"/>
+   </widget>
+   <widget class="QMenu" name="menu_S">
+    <property name="title">
+     <string>设置(&amp;S)</string>
+    </property>
+    <addaction name="act_setting_format"/>
    </widget>
    <addaction name="menu_T"/>
+   <addaction name="menu_S"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
-  <action name="act_new_task">
+  <action name="act_file_new">
    <property name="text">
-    <string>新建任务</string>
+    <string>新建文件</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="act_setting_format">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>启用格式化</string>
+   </property>
+  </action>
+  <action name="act_file_open">
+   <property name="text">
+    <string>打开文件</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="act_file_save">
+   <property name="text">
+    <string>保存文件</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="act_file_save_as">
+   <property name="text">
+    <string>另存为</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="action_5">
+   <property name="text">
+    <string>预览源码</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
    </property>
   </action>
  </widget>
@@ -326,6 +567,16 @@
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>ledt_src_filename</tabstop>
+  <tabstop>ledt_src_path_dir</tabstop>
+  <tabstop>ledt_dst_path_dir</tabstop>
+  <tabstop>spin_src_duration</tabstop>
+  <tabstop>spin_src_size</tabstop>
+  <tabstop>tbtn_src_meta_refresh</tabstop>
+  <tabstop>tbtn_move_up</tabstop>
+  <tabstop>tbtn_move_down</tabstop>
+  <tabstop>tbtn_remove</tabstop>
+  <tabstop>tbtn_clear</tabstop>
   <tabstop>tabv_intervals</tabstop>
   <tabstop>spin_interval_begin_hour</tabstop>
   <tabstop>spin_interval_begin_mins</tabstop>
@@ -334,11 +585,11 @@
   <tabstop>spin_interval_end_mins</tabstop>
   <tabstop>spin_interval_end_secs</tabstop>
   <tabstop>pbtn_add_interval</tabstop>
-  <tabstop>tbtn_move_up</tabstop>
-  <tabstop>tbtn_move_down</tabstop>
-  <tabstop>tbtn_remove</tabstop>
-  <tabstop>txtedt_source</tabstop>
+  <tabstop>tabw_view</tabstop>
   <tabstop>txtbrw_output</tabstop>
+  <tabstop>txtbrw_source</tabstop>
+  <tabstop>tbtn_refresh_source</tabstop>
+  <tabstop>tbtn_refresh_commands</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -365,8 +616,8 @@
    <slot>on_spin_interval_begin_value_changed(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>196</x>
-     <y>516</y>
+     <x>192</x>
+     <y>526</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -381,8 +632,8 @@
    <slot>on_spin_interval_begin_value_changed(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>254</x>
-     <y>516</y>
+     <x>250</x>
+     <y>526</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -413,8 +664,8 @@
    <slot>on_spin_interval_end_value_changed(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>196</x>
-     <y>544</y>
+     <x>192</x>
+     <y>554</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>
@@ -429,8 +680,8 @@
    <slot>on_spin_interval_end_value_changed(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>254</x>
-     <y>544</y>
+     <x>250</x>
+     <y>554</y>
     </hint>
     <hint type="destinationlabel">
      <x>399</x>

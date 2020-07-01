@@ -50,6 +50,16 @@ class Moment:
             if len(lst) == 3 \
             else None
 
+    @classmethod
+    def from_secs(cls, secs: int):
+        z = secs
+        secs = z % 60
+        z //= 60
+        mins = z % 60
+        z //= 60
+        hour = z
+        return Moment(hour, mins, secs)
+
     def to_secs(self) -> int:
         return reduce(
             lambda x, y: x * 60 + y,

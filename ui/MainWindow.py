@@ -2,7 +2,8 @@ import os
 from typing import Iterable
 
 from PyQt5.QtCore import Qt, pyqtSlot, QDir, QModelIndex
-from PyQt5.QtWidgets import QMainWindow, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QMessageBox, QFileDialog
+from pymediainfo import MediaInfo
 
 from core import Moment, ModelData
 from ui import DurationsListModel
@@ -14,18 +15,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__()
         super(MainWindow, self).setupUi(self)
 
-        self.model = DurationsListModel(ModelData(),
-                                        self.tabv_intervals)
-        self.tabv_intervals.setModel(self.model)
+        self._model = DurationsListModel(ModelData(),
+                                         self.tabv_intervals)
+        self._json_path = None
+        self.tabv_intervals.setModel(self._model)
 
         self.lbl_file_drop.changeFile.connect(
             self.on_lbl_file_drop_change_file
         )
-        self.model.dataChanged.connect(self.on_model_data_changed)
-        self.model.rowsInserted.connect(self.on_model_rows_inserted)
-        self.model.rowsMoved.connect(self.on_model_rows_moved)
-        self.model.rowsRemoved.connect(self.on_model_rows_removed)
-        self.model.modelReset.connect(self.on_model_model_reset)
+        self._model.dataChanged.connect(self.on_model_data_changed)
+        self._model.rowsInserted.connect(self.on_model_rows_inserted)
+        self._model.rowsMoved.connect(self.on_model_rows_moved)
+        self._model.rowsRemoved.connect(self.on_model_rows_removed)
+        self._model.modelReset.connect(self.on_model_model_reset)
 
         self.update_source()
         self.update_output()
@@ -38,17 +40,177 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.spin_interval_end_mins.setValue(0)
         self.spin_interval_end_secs.setValue(0)
 
-    @pyqtSlot()
-    def on_act_new_task_triggered(self):
-        self.lineedt_output_path.clear()
-        self.model.setPathSrc("")
-        self.model.setPathDstDir("")
-        self.model.clearIntervals()
-        self.__clear_add_interval()
+    @pyqtSlot(name='on_tbtn_src_meta_refresh_clicked')
+    def refresh_src_meta(self):
+        src_path = os.path.join(self._model.src_path_dir,
+                                self._model.src_filename)
+        try:
+            stat = os.stat(src_path)
+            media_info = MediaInfo.parse(src_path)
+            if media_info is not None and len(media_info.tracks):
+                # Warning: Maybe track 0 is not a video track
+                self.spin_src_duration.setValue(media_info.tracks[0].duration)
+            size_src = stat.st_size
+            self.spin_src_size.setValue(size_src)
+
+            duration_src = self.spin_src_duration.value()
+            duration_dst = 0
+            for interval in self._model.iter_intervals():
+                begin, end = interval
+                delta = Moment.from_list(end) - Moment.from_list(begin)
+                duration_dst += delta.to_secs() * 1000
+            save_rate = 1.0 - duration_dst / duration_src
+            save_time = Moment.from_secs((duration_src - duration_dst) // 1000)
+            self.statusBar \
+                .showMessage("删减时长：%02d:%02d:%02d，节约率：%.2f %%，估计可节省空间：%.2f MiB"
+                             % (save_time.hour, save_time.mins, save_time.secs,
+                                save_rate * 100.0,
+                                (size_src * save_rate) / 1048576))
+        except OSError:
+            pass
+
+    @pyqtSlot(name='on_tbtn_refresh_source_clicked')
+    def update_source(self):
+        self.txtbrw_source.setText(
+            self._model.export_to_json(indent=4)
+            if self.act_setting_format.isChecked()
+            else self._model.export_to_json()
+        )
+
+    @pyqtSlot(name='on_tbtn_refresh_commands_clicked')
+    def update_output(self):
+        src_filename = self._model.src_filename
+        src_path_dir = self._model.src_path_dir
+        src_path = QDir.toNativeSeparators(
+            os.path.join(src_path_dir, src_filename)
+        )
+        dst_path_dir = QDir.toNativeSeparators(self._model.dst_path_dir)
+        dst_prefix, dst_suffix = os.path.splitext(src_filename)
+        cmd = 'ffmpeg -ss %02d:%02d:%02d -t %02d:%02d:%02d ' \
+              '-i %s ' \
+              '-vcodec copy -acodec copy ' \
+              '%s'
+
+        self.txtbrw_output.clear()
+
+        for index, interval in enumerate(self._model.iter_intervals()):
+            begin, end = interval
+            begin = Moment(begin[0], begin[1], begin[2])
+            end = Moment(end[0], end[1], end[2])
+            delta = end - begin
+            self.txtbrw_output.append(cmd % (
+                begin.hour, begin.mins, begin.secs,
+                delta.hour, delta.mins, delta.secs,
+                src_path,
+                os.path.join(
+                    dst_path_dir,
+                    '%s_%d%s' % (dst_prefix,
+                                 index,
+                                 dst_suffix)
+                )
+            ))
+
+    def open_json(self, json_path: str) -> bool:
+        if os.path.exists(json_path):
+            with open(json_path, 'r', encoding='utf8') as f:
+                if self._model.import_from_json(f.read()):
+                    self.ledt_src_filename.setText(self._model.src_filename)
+                    self.ledt_src_path_dir.setText(self._model.src_path_dir)
+                    self.ledt_dst_path_dir.setText(self._model.dst_path_dir)
+                    self.txtbrw_output.clear()
+                    self.txtbrw_source.clear()
+                    self.__clear_add_interval()
+
+                    self._json_path = json_path
+
+                    self.refresh_src_meta()
+                    self.update_output()
+                    self.update_source()
+
+                    return True
+                else:
+                    return False
 
     @pyqtSlot()
-    def on_tbtn_parse_source_clicked(self):
-        self.parse_source()
+    def on_act_file_new_triggered(self):
+        self.ledt_src_filename.clear()
+        self.ledt_src_path_dir.clear()
+        self.ledt_dst_path_dir.clear()
+        self.spin_src_duration.setValue(0)
+        self.spin_src_size.setValue(0)
+        self.txtbrw_output.clear()
+        self.txtbrw_source.clear()
+
+        self._model.reset_data()
+        self.__clear_add_interval()
+
+        self._json_path = None
+
+        self.update_output()
+        self.update_source()
+
+    @pyqtSlot()
+    def on_act_file_open_triggered(self):
+        json_path, _ = QFileDialog.getOpenFileName(
+            parent=self,
+            caption="打开JSON文件",
+            filter="JSON File (*.json)"
+        )
+        if len(json_path):
+            if self.open_json(json_path):
+                self.statusBar \
+                    .showMessage("解析配置已成功：%s" % json_path)
+            else:
+                self.statusBar \
+                    .showMessage("解析配置时出错：JSON解析出错或者存在不合法的参数")
+
+    @pyqtSlot()
+    def on_act_file_save_triggered(self):
+        if self._json_path is None:
+            self.on_act_file_save_as_triggered()
+        else:
+            try:
+                with open(self._json_path, 'w', encoding='utf8') as f:
+                    f.write(
+                        self._model.export_to_json(indent=4)
+                        if self.act_setting_format.isChecked()
+                        else self._model.export_to_json()
+                    )
+                    self.statusBar \
+                        .showMessage("保存成功：%s" % self._json_path)
+            except IOError:
+                QMessageBox.critical(
+                    parent=self,
+                    title="保存失败",
+                    text="保存时出现了错误，请使用另存为保存"
+                )
+
+    @pyqtSlot()
+    def on_act_file_save_as_triggered(self):
+        json_path, _ = QFileDialog.getSaveFileName(
+            parent=self,
+            caption="另存为",
+            directory=os.path.splitext(self._model.src_filename)[0],
+            filter="JSON File (*.json)"
+        )
+        if len(json_path):
+            try:
+                with open(json_path, 'w', encoding='utf8') as f:
+                    f.write(
+                        self._model.export_to_json(indent=4)
+                        if self.act_setting_format.isChecked()
+                        else self._model.export_to_json()
+                    )
+                    self._json_path = json_path
+                    self.statusBar \
+                        .showMessage("另存为成功：%s" % self._json_path)
+            except IOError:
+                QMessageBox.critical(
+                    parent=self,
+                    title="保存失败",
+                    text="保存时出现了错误，可能是磁盘空间不足等原因，"
+                         "建议换一个合适的路径进行保存"
+                )
 
     @pyqtSlot()
     def on_pbtn_add_interval_clicked(self):
@@ -64,7 +226,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
 
         if begin is not None and end is not None and begin <= end:
-            self.model.addInterval(begin, end)
+            self._model.add_interval(begin, end)
             self.__clear_add_interval()
             self.spin_interval_begin_hour.setFocus()
         else:
@@ -75,14 +237,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         rows = set((index.row()
                     for index in self.tabv_intervals.selectedIndexes()))
         for row in sorted(rows):
-            self.model.moveInterval(row, -1)
+            self._model.move_interval(row, -1)
 
     @pyqtSlot()
     def on_tbtn_move_down_clicked(self):
         rows = set((index.row()
                     for index in self.tabv_intervals.selectedIndexes()))
         for row in sorted(rows, reverse=True):
-            self.model.moveInterval(row, 1)
+            self._model.move_interval(row, 1)
 
     @pyqtSlot()
     def on_tbtn_remove_clicked(self):
@@ -90,13 +252,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         rows = set((index.row()
                     for index in self.tabv_intervals.selectedIndexes()))
         for row in sorted(rows, reverse=True):
-            self.model.removeRow(row)
+            self._model.removeRow(row)
         self.tabv_intervals.setUpdatesEnabled(True)
 
     @pyqtSlot()
     def on_tbtn_clear_clicked(self):
         self.tabv_intervals.setUpdatesEnabled(False)
-        self.model.clearIntervals()
+        self._model.clear_intervals()
         self.tabv_intervals.setUpdatesEnabled(True)
 
     @pyqtSlot(int)
@@ -135,17 +297,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         #     self.spin_interval_begin_secs.setValue(end.secs)
         pass
 
-    @pyqtSlot(name='on_lineedt_output_path_editingFinished')
-    def on_lineedt_output_path_editing_finished(self):
-        self.model.setPathDstDir(self.lineedt_output_path.text())
-        self.update_source()
-        self.update_output()
-
     @pyqtSlot(str)
     def on_lbl_file_drop_change_file(self, url):
-        self.model.setPathSrc(url)
-        self.update_source()
-        self.update_output()
+        path_dir, filename = os.path.split(url)
+        if os.path.splitext(filename)[-1] == '.json':
+            if self.open_json(url):
+                self.statusBar \
+                    .showMessage("解析配置已成功：%s" % url)
+            else:
+                self.statusBar \
+                    .showMessage("解析配置时出错：JSON解析出错或者存在不合法的参数")
+        else:
+            self.ledt_src_path_dir.setText(path_dir)
+            self.ledt_src_filename.setText(filename)
+            self.refresh_src_meta()
+            self.update_source()
+            self.update_output()
 
     @pyqtSlot(QModelIndex, QModelIndex, 'QVector<int>')
     def on_model_data_changed(self,
@@ -188,45 +355,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.update_source()
         self.update_output()
 
-    def parse_source(self):
-        txt = self.txtedt_source.toPlainText()
-        if self.model.importFromJson(txt):
-            self.statusbar.showMessage("解析源码已成功：已更新参数")
-        else:
-            self.statusbar.showMessage("解析源码时出错：JSON解析出错或者存在不合法的参数")
+    @pyqtSlot(str, name='on_ledt_src_filename_textChanged')
+    def on_ledt_src_filename_text_changed(self, text: str):
+        self._model.src_filename = text
 
-    def update_source(self):
-        self.txtedt_source.setText(
-            self.model.exportToJson(indent=4)
-            if self.chkbox_format_source.isChecked()
-            else self.model.exportToJson()
-        )
+    @pyqtSlot(str, name='on_ledt_src_path_dir_textChanged')
+    def on_ledt_src_path_dir_text_changed(self, text: str):
+        self._model.src_path_dir = text
 
-    def update_output(self):
-        path_src = QDir.toNativeSeparators(self.model.getPathSrc())
-        path_dst_dir = QDir.toNativeSeparators(self.model.getPathDstDir())
-        path_dst_base = os.path.splitext(os.path.basename(path_src))
-        path_dst_base_prefix, path_dst_base_suffix = path_dst_base
-        cmd = 'ffmpeg -ss %02d:%02d:%02d -t %02d:%02d:%02d ' \
-              '-i %s ' \
-              '-vcodec copy -acodec copy ' \
-              '%s'
-
-        self.txtbrw_output.clear()
-
-        for index, interval in enumerate(self.model.iterIntervals()):
-            begin, end = interval
-            begin = Moment(begin[0], begin[1], begin[2])
-            end = Moment(end[0], end[1], end[2])
-            delta = end - begin
-            self.txtbrw_output.append(cmd % (
-                begin.hour, begin.mins, begin.secs,
-                delta.hour, delta.mins, delta.secs,
-                path_src,
-                os.path.join(
-                    path_dst_dir,
-                    '%s_%d%s' % (path_dst_base_prefix,
-                                 index,
-                                 path_dst_base_suffix)
-                )
-            ))
+    @pyqtSlot(str, name='on_ledt_dst_path_dir_textChanged')
+    def on_ledt_dst_path_dir_text_changed(self, text: str):
+        self._model.dst_path_dir = text

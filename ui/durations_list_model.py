@@ -9,9 +9,9 @@ from core import ModelData, Moment
 class DurationsListModel(QAbstractTableModel):
     __regexp_moment = re.compile(r'([0-9]+):([0-5]?[0-9]):([0-5]?[0-9])')
 
-    def __init__(self, modelData: ModelData, parent: QObject = None):
+    def __init__(self, model_data: ModelData, parent: QObject = None):
         super(DurationsListModel, self).__init__(parent)
-        self._model_data = modelData
+        self._model_data = model_data
 
     def rowCount(self, parent: QModelIndex = None, *args, **kwargs) -> int:
         return self._model_data.intervals_size()
@@ -84,11 +84,11 @@ class DurationsListModel(QAbstractTableModel):
                 result = False
         return result
 
-    def flags(self, index: QModelIndex) -> int:
+    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
         if not index.isValid():
             return Qt.ItemIsEnabled
-        return super(DurationsListModel, self).flags(index) \
-               | Qt.ItemIsEditable
+        flags = super(DurationsListModel, self).flags(index)
+        return flags | Qt.ItemIsEditable
 
     def insertRow(self, row: int, parent: QModelIndex = None, *args, **kwargs) -> bool:
         return self.insertRows(row, 1, parent, *args, **kwargs)
@@ -111,21 +111,21 @@ class DurationsListModel(QAbstractTableModel):
         intervals_size = self._model_data.intervals_size()
         if 0 <= row < intervals_size \
                 and count > 0 and row + count <= intervals_size:
-            for i in range(row + count - 1, row, -1):
+            for i in reversed(range(row, row + count)):
                 self._model_data.del_interval(i)
         else:
             result = False
         self.endRemoveRows()
         return result
 
-    def addInterval(self, begin: Moment, end: Moment):
+    def add_interval(self, begin: Moment, end: Moment):
         if begin <= end:
             index = self.rowCount()
             self.beginInsertRows(QModelIndex(), index, index)
             self._model_data.add_interval(begin, end)
             self.endInsertRows()
 
-    def moveInterval(self, row: int, offset: int):
+    def move_interval(self, row: int, offset: int):
         row_src, row_dst = row, row + offset
         row_cnt = self.rowCount()
         if offset != 0 \
@@ -138,28 +138,62 @@ class DurationsListModel(QAbstractTableModel):
             self._model_data.move_interval(row, offset)
             self.endMoveRows()
 
-    def clearIntervals(self):
+    def clear_intervals(self):
         self.beginRemoveRows(QModelIndex(), 0, self.rowCount() - 1)
         self._model_data.clear_intervals()
         self.endRemoveRows()
+        self.beginResetModel()
+        self.endResetModel()
 
-    def iterIntervals(self):
+    def iter_intervals(self):
         return self._model_data.intervals_iter()
 
-    def getPathSrc(self) -> str:
-        return self._model_data.path_src
+    @property
+    def src_filename(self) -> str:
+        return self._model_data.src_filename
 
-    def setPathSrc(self, value: str):
-        self._model_data.path_src = value
+    @src_filename.setter
+    def src_filename(self, value: str):
+        self._model_data.src_filename = value
 
-    def getPathDstDir(self) -> str:
-        return self._model_data.path_dst_dir
+    @property
+    def src_path_dir(self) -> str:
+        return self._model_data.src_path_dir
 
-    def setPathDstDir(self, value: str):
-        self._model_data.path_dst_dir = value
+    @src_path_dir.setter
+    def src_path_dir(self, value: str):
+        self._model_data.src_path_dir = value
 
-    def importFromJson(self, strJson: str) -> bool:
-        model_data = ModelData.from_json(strJson)
+    @property
+    def dst_path_dir(self) -> str:
+        return self._model_data.dst_path_dir
+
+    @dst_path_dir.setter
+    def dst_path_dir(self, value: str):
+        self._model_data.dst_path_dir = value
+
+    # @property
+    # def src_duration(self):
+    #     return self._model_data.src_duration
+    #
+    # @src_duration.setter
+    # def src_duration(self, value: int):
+    #     self._model_data.src_duration = value
+    #
+    # @property
+    # def src_size(self):
+    #     return self._model_data.src_size
+    #
+    # @src_size.setter
+    # def src_size(self, value: int):
+    #     self._model_data.src_size = value
+
+    def reset_data(self):
+        self.clear_intervals()
+        self._model_data = ModelData()
+
+    def import_from_json(self, str_json: str) -> bool:
+        model_data = ModelData.from_json(str_json)
         if model_data is not None:
             self.beginResetModel()
             self._model_data = model_data
@@ -168,5 +202,5 @@ class DurationsListModel(QAbstractTableModel):
         else:
             return False
 
-    def exportToJson(self, *args, **kwargs) -> str:
+    def export_to_json(self, *args, **kwargs) -> str:
         return self._model_data.to_json(*args, **kwargs)
