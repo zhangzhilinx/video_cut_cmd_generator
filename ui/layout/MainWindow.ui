@@ -334,15 +334,18 @@
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="QSpinBox" name="spin_src_size">
+              <widget class="QDoubleSpinBox" name="spin_src_size">
                <property name="readOnly">
                 <bool>true</bool>
                </property>
                <property name="suffix">
                 <string> 字节</string>
                </property>
+               <property name="decimals">
+                <number>0</number>
+               </property>
                <property name="maximum">
-                <number>999999999</number>
+                <double>1000000000000000072531436381529235126158374409646521955518210155479040.000000000000000</double>
                </property>
               </widget>
              </item>

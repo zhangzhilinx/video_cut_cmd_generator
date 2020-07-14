@@ -190,7 +190,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         json_path, _ = QFileDialog.getSaveFileName(
             parent=self,
             caption="另存为",
-            directory=os.path.splitext(self._model.src_filename)[0],
+            directory=os.path.join(
+                self._model.src_path_dir,
+                os.path.splitext(self._model.src_filename)[0]
+            ),
             filter="JSON File (*.json)"
         )
         if len(json_path):
